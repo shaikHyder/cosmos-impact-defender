@@ -297,7 +297,7 @@ const AsteroidSimulator: React.FC = () => {
             </Card>
           </div>
 
-          {/* 3D Visualization */}
+          {/* 3D Visualization with Real-Time Data */}
           <div className="xl:col-span-3">
             <Card className="cosmic-glow h-[600px]">
               <CardHeader>
@@ -309,8 +309,120 @@ const AsteroidSimulator: React.FC = () => {
                   Watch the asteroid approach Earth. Red trajectory = Impact, Green = Miss
                 </CardDescription>
               </CardHeader>
-              <CardContent className="h-[500px] p-2">
-                <AsteroidVisualization3D asteroidData={asteroidVisualizationData} />
+              <CardContent className="h-[500px] p-0">
+                <div className="grid grid-cols-4 h-full">
+                  {/* 3D Animation */}
+                  <div className="col-span-3 h-full">
+                    <AsteroidVisualization3D asteroidData={asteroidVisualizationData} />
+                  </div>
+                  
+                  {/* Real-Time Data Panel */}
+                  <div className="col-span-1 p-4 border-l border-border bg-secondary/20 overflow-y-auto">
+                    <h3 className="font-semibold text-primary mb-4 text-sm">Live Impact Data</h3>
+                    
+                    {/* Current Asteroid Stats */}
+                    <div className="space-y-3 mb-6">
+                      <div className="p-2 rounded bg-primary/10 border border-primary/30">
+                        <div className="text-xs text-muted-foreground">Diameter</div>
+                        <div className="text-lg font-bold text-primary">{currentAsteroid.size}m</div>
+                      </div>
+                      
+                      <div className="p-2 rounded bg-destructive/10 border border-destructive/30">
+                        <div className="text-xs text-muted-foreground">Velocity</div>
+                        <div className="text-lg font-bold text-destructive">{currentAsteroid.velocity} km/s</div>
+                      </div>
+                      
+                      <div className="p-2 rounded bg-accent/10 border border-accent/30">
+                        <div className="text-xs text-muted-foreground">Entry Angle</div>
+                        <div className="text-lg font-bold text-accent">{currentAsteroid.angle}°</div>
+                      </div>
+                    </div>
+
+                    {/* Impact Calculations */}
+                    <div className="space-y-3 mb-6">
+                      <h4 className="font-semibold text-destructive text-sm">Destruction Power</h4>
+                      
+                      <div className="p-2 rounded bg-destructive/10 border border-destructive/30">
+                        <div className="text-xs text-muted-foreground">Mass</div>
+                        <div className="text-sm font-bold text-destructive">{calculations.mass.toFixed(1)}B kg</div>
+                      </div>
+                      
+                      <div className="p-2 rounded bg-destructive/10 border border-destructive/30">
+                        <div className="text-xs text-muted-foreground">TNT Equivalent</div>
+                        <div className="text-sm font-bold text-destructive">
+                          {calculations.tntEquivalent >= 1e6 
+                            ? `${(calculations.tntEquivalent / 1e6).toFixed(1)}Mt`
+                            : `${(calculations.tntEquivalent / 1e3).toFixed(1)}kt`
+                          }
+                        </div>
+                      </div>
+                      
+                      <div className="p-2 rounded bg-destructive/10 border border-destructive/30">
+                        <div className="text-xs text-muted-foreground">Crater Size</div>
+                        <div className="text-sm font-bold text-destructive">{calculations.craterDiameter.toFixed(1)} km</div>
+                      </div>
+                      
+                      <div className="p-2 rounded bg-destructive/10 border border-destructive/30">
+                        <div className="text-xs text-muted-foreground">People at Risk</div>
+                        <div className="text-sm font-bold text-destructive">
+                          {calculations.populationAffected > 1e6 
+                            ? `${(calculations.populationAffected / 1e6).toFixed(1)}M`
+                            : `${(calculations.populationAffected / 1e3).toFixed(0)}K`
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Defense Status */}
+                    {deflectionDeltaV[0] > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-stellar-500 text-sm">Defense Status</h4>
+                        
+                        <div className="p-2 rounded bg-stellar-500/10 border border-stellar-500/30">
+                          <div className="text-xs text-muted-foreground">Delta-V Applied</div>
+                          <div className="text-sm font-bold text-stellar-500">{deflectionDeltaV[0]} km/s</div>
+                        </div>
+                        
+                        <div className="p-2 rounded bg-stellar-500/10 border border-stellar-500/30">
+                          <div className="text-xs text-muted-foreground">Trajectory Shift</div>
+                          <div className="text-sm font-bold text-stellar-500">{calculations.deflectionDistance.toFixed(0)} km</div>
+                        </div>
+                        
+                        <div className={`p-2 rounded border ${calculations.deflectionDistance > 12756 ? 'bg-green-500/10 border-green-500/30' : 'bg-destructive/10 border-destructive/30'}`}>
+                          <div className="text-xs text-muted-foreground">Mission Status</div>
+                          <div className={`text-sm font-bold ${calculations.deflectionDistance > 12756 ? 'text-green-500' : 'text-destructive'}`}>
+                            {calculations.deflectionDistance > 12756 ? "SUCCESS" : "FAILED"}
+                          </div>
+                        </div>
+                        
+                        <div className={`p-2 rounded border ${calculations.survivalChance > 90 ? 'bg-green-500/10 border-green-500/30' : calculations.survivalChance > 50 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-destructive/10 border-destructive/30'}`}>
+                          <div className="text-xs text-muted-foreground">Survival Chance</div>
+                          <div className={`text-sm font-bold ${calculations.survivalChance > 90 ? 'text-green-500' : calculations.survivalChance > 50 ? 'text-yellow-500' : 'text-destructive'}`}>
+                            {calculations.survivalChance.toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Threat Assessment */}
+                    <div className="mt-6 p-3 rounded bg-muted/20 border border-border">
+                      <h4 className="font-semibold text-xs mb-2 flex items-center">
+                        <AlertTriangle className="w-3 h-3 mr-1 text-accent" />
+                        Threat Level
+                      </h4>
+                      <Badge variant={calculations.tntEquivalent > 10000000 ? "destructive" : calculations.tntEquivalent > 100000 ? "secondary" : "outline"} className="text-xs">
+                        {calculations.tntEquivalent > 10000000 
+                          ? "EXTINCTION EVENT" 
+                          : calculations.tntEquivalent > 100000
+                          ? "GLOBAL THREAT"
+                          : calculations.tntEquivalent > 1000
+                          ? "REGIONAL DANGER"
+                          : "LOCAL IMPACT"
+                        }
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
