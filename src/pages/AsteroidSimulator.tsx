@@ -3,8 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import Starfield from '@/components/Starfield';
-import { Calculator, Zap, AlertTriangle, Shield, Globe } from 'lucide-react';
+import AsteroidVisualization3D from '@/components/AsteroidVisualization3D';
+import { Calculator, Zap, AlertTriangle, Shield, Globe, Target, Rocket } from 'lucide-react';
 
 interface AsteroidData {
   name: string;
@@ -35,6 +37,13 @@ const predefinedAsteroids: AsteroidData[] = [
     density: 2000,
     velocity: 25,
     angle: 30
+  },
+  {
+    name: "Chicxulub-Killer",
+    size: 10000,
+    density: 2500,
+    velocity: 30,
+    angle: 60
   }
 ];
 
@@ -74,15 +83,20 @@ const AsteroidSimulator: React.FC = () => {
     const tntEquivalent = kineticEnergy / 4.184e9;
     
     // Deflection effectiveness
-    const deflectionAngle = deflectionDeltaV[0] * 1000 / currentAsteroid.velocity; // simplified
+    const deflectionAngle = deflectionDeltaV[0] * 1000 / (currentAsteroid.velocity * 1000); // simplified
     const deflectionDistance = deflectionAngle * 384400000; // Earth-Moon distance as reference
+    
+    // Damage assessment
+    const populationAffected = Math.min(Math.pow(craterDiameter / 1000, 2) * 1000000, 8000000000);
     
     return {
       mass: mass / 1e12, // in billions of kg
       energy: kineticEnergy / 1e15, // in petajoules
       tntEquivalent,
       craterDiameter: craterDiameter / 1000, // in km
-      deflectionDistance: deflectionDistance / 1000 // in km
+      deflectionDistance: deflectionDistance / 1000, // in km
+      populationAffected,
+      survivalChance: deflectionDistance > 12756 ? 100 : Math.max(0, 100 - (tntEquivalent / 1000000) * 50)
     };
   }, [currentAsteroid, deflectionDeltaV]);
 
@@ -98,39 +112,47 @@ const AsteroidSimulator: React.FC = () => {
     }
   };
 
+  // Prepare data for 3D visualization
+  const asteroidVisualizationData = {
+    size: currentAsteroid.size,
+    velocity: currentAsteroid.velocity,
+    angle: currentAsteroid.angle,
+    deflectionDeltaV: deflectionDeltaV[0]
+  };
+
   return (
     <div className="min-h-screen pt-20 pb-10 px-4 relative">
       <Starfield />
       
       <div className="container mx-auto">
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-cosmic bg-clip-text text-transparent">
-            Asteroid Impact Simulator
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-cosmic bg-clip-text text-transparent animate-float">
+            Advanced Asteroid Impact Simulator
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Adjust asteroid parameters and see the devastating effects of cosmic impacts on Earth.
-            Experiment with deflection strategies to protect our planet.
+            Experience real-time 3D asteroid trajectory simulation. Watch as your parameter changes instantly 
+            affect the cosmic dance between Earth and potential impactors.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid xl:grid-cols-5 gap-8">
           {/* Controls Panel */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="cosmic-glow">
+          <div className="xl:col-span-2 space-y-6">
+            <Card className="cosmic-glow border-primary/30">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  <span>Asteroid Parameters</span>
+                  <Rocket className="w-5 h-5 text-primary" />
+                  <span>Asteroid Configuration</span>
                 </CardTitle>
                 <CardDescription>
-                  Configure your asteroid's properties
+                  Configure your asteroid's deadly parameters
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Select Predefined Asteroid</label>
+                  <label className="text-sm font-medium mb-2 block">Select Scenario</label>
                   <Select value={selectedAsteroid} onValueChange={handlePresetSelect}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-secondary/20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -144,47 +166,58 @@ const AsteroidSimulator: React.FC = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Diameter: {currentAsteroid.size}m
-                  </label>
-                  <Slider
-                    value={size}
-                    onValueChange={setSize}
-                    max={500}
-                    min={10}
-                    step={10}
-                    className="cosmic-glow"
-                    disabled={selectedAsteroid !== "custom"}
-                  />
-                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block flex items-center justify-between">
+                      <span>Diameter: {currentAsteroid.size}m</span>
+                      <Badge variant={currentAsteroid.size > 1000 ? "destructive" : currentAsteroid.size > 100 ? "secondary" : "outline"}>
+                        {currentAsteroid.size > 1000 ? "City Killer" : currentAsteroid.size > 100 ? "Regional Threat" : "Local Impact"}
+                      </Badge>
+                    </label>
+                    <Slider
+                      value={size}
+                      onValueChange={setSize}
+                      max={1000}
+                      min={10}
+                      step={10}
+                      className="cosmic-glow"
+                      disabled={selectedAsteroid !== "custom"}
+                    />
+                  </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Velocity: {currentAsteroid.velocity} km/s
-                  </label>
-                  <Slider
-                    value={velocity}
-                    onValueChange={setVelocity}
-                    max={40}
-                    min={10}
-                    step={1}
-                    disabled={selectedAsteroid !== "custom"}
-                  />
-                </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block flex items-center justify-between">
+                      <span>Velocity: {currentAsteroid.velocity} km/s</span>
+                      <Badge variant={currentAsteroid.velocity > 30 ? "destructive" : "secondary"}>
+                        {currentAsteroid.velocity > 30 ? "Hypersonic" : "Fast"}
+                      </Badge>
+                    </label>
+                    <Slider
+                      value={velocity}
+                      onValueChange={setVelocity}
+                      max={50}
+                      min={10}
+                      step={1}
+                      disabled={selectedAsteroid !== "custom"}
+                    />
+                  </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Entry Angle: {currentAsteroid.angle}°
-                  </label>
-                  <Slider
-                    value={angle}
-                    onValueChange={setAngle}
-                    max={90}
-                    min={15}
-                    step={5}
-                    disabled={selectedAsteroid !== "custom"}
-                  />
+                  <div>
+                    <label className="text-sm font-medium mb-2 block flex items-center justify-between">
+                      <span>Entry Angle: {currentAsteroid.angle}°</span>
+                      <Badge variant={currentAsteroid.angle > 60 ? "destructive" : "secondary"}>
+                        {currentAsteroid.angle > 60 ? "Steep" : "Shallow"}
+                      </Badge>
+                    </label>
+                    <Slider
+                      value={angle}
+                      onValueChange={setAngle}
+                      max={90}
+                      min={15}
+                      step={5}
+                      disabled={selectedAsteroid !== "custom"}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -193,16 +226,19 @@ const AsteroidSimulator: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Shield className="w-5 h-5 text-stellar-500" />
-                  <span>Deflection Strategy</span>
+                  <span>Planetary Defense System</span>
                 </CardTitle>
                 <CardDescription>
-                  Apply delta-v to change asteroid trajectory
+                  Apply deflection force to save humanity
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Delta-V: {deflectionDeltaV[0]} km/s
+                  <label className="text-sm font-medium mb-2 block flex items-center justify-between">
+                    <span>Delta-V: {deflectionDeltaV[0]} km/s</span>
+                    <Badge variant={deflectionDeltaV[0] > 0 ? "default" : "outline"}>
+                      {deflectionDeltaV[0] > 0 ? "Active" : "Inactive"}
+                    </Badge>
                   </label>
                   <Slider
                     value={deflectionDeltaV}
@@ -210,122 +246,202 @@ const AsteroidSimulator: React.FC = () => {
                     max={5}
                     min={0}
                     step={0.1}
+                    className="cosmic-glow"
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    Change in velocity applied to deflect the asteroid
+                    Kinetic impactor or ion thruster deflection force
                   </p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-stellar-500/10 border border-stellar-500/30">
+                  <h4 className="font-semibold text-stellar-500 mb-2">Mission Status</h4>
+                  <p className="text-sm">
+                    {deflectionDeltaV[0] === 0 
+                      ? "No deflection mission active. Earth is vulnerable."
+                      : calculations.deflectionDistance > 12756
+                      ? "🎯 Mission Success! Asteroid deflected away from Earth."
+                      : "⚠️ Deflection insufficient. Increase delta-V or launch earlier."
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card className="cosmic-glow">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Target className="w-5 h-5 text-accent" />
+                  <span>Impact Overview</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                    <h4 className="text-2xl font-bold text-destructive">
+                      {calculations.tntEquivalent >= 1e6 
+                        ? `${(calculations.tntEquivalent / 1e6).toFixed(1)}Mt`
+                        : `${(calculations.tntEquivalent / 1e3).toFixed(1)}kt`
+                      }
+                    </h4>
+                    <p className="text-xs text-muted-foreground">TNT Equivalent</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-accent/10 border border-accent/30">
+                    <h4 className="text-2xl font-bold text-accent">
+                      {calculations.craterDiameter.toFixed(1)}km
+                    </h4>
+                    <p className="text-xs text-muted-foreground">Crater Diameter</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Results Panel */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="cosmic-glow">
+          {/* 3D Visualization */}
+          <div className="xl:col-span-3">
+            <Card className="cosmic-glow h-[600px]">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Calculator className="w-5 h-5 text-primary" />
-                  <span>Impact Analysis</span>
+                  <Globe className="w-5 h-5 text-primary" />
+                  <span>Real-Time 3D Trajectory Simulation</span>
                 </CardTitle>
                 <CardDescription>
-                  Calculated effects of {currentAsteroid.name}
+                  Watch the asteroid approach Earth. Red trajectory = Impact, Green = Miss
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg bg-secondary/20 border border-primary/20">
-                      <h4 className="font-semibold text-primary mb-2">Asteroid Properties</h4>
-                      <div className="space-y-1 text-sm">
-                        <p>Diameter: <span className="text-foreground font-medium">{currentAsteroid.size}m</span></p>
-                        <p>Mass: <span className="text-foreground font-medium">{calculations.mass.toFixed(2)} billion kg</span></p>
-                        <p>Velocity: <span className="text-foreground font-medium">{currentAsteroid.velocity} km/s</span></p>
-                        <p>Entry Angle: <span className="text-foreground font-medium">{currentAsteroid.angle}°</span></p>
-                      </div>
-                    </div>
+              <CardContent className="h-[500px] p-2">
+                <AsteroidVisualization3D asteroidData={asteroidVisualizationData} />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-                    <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
-                      <h4 className="font-semibold text-destructive mb-2">Impact Energy</h4>
-                      <div className="space-y-1 text-sm">
-                        <p>Kinetic Energy: <span className="text-foreground font-medium">{calculations.energy.toFixed(2)} PJ</span></p>
-                        <p>TNT Equivalent: <span className="text-foreground font-medium">
-                          {calculations.tntEquivalent >= 1e6 
-                            ? `${(calculations.tntEquivalent / 1e6).toFixed(1)} Mt`
-                            : `${(calculations.tntEquivalent / 1e3).toFixed(1)} kt`
-                          }
-                        </span></p>
-                      </div>
+        {/* Detailed Results */}
+        <div className="mt-8">
+          <Card className="cosmic-glow">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Calculator className="w-5 h-5 text-primary" />
+                <span>Detailed Impact Analysis</span>
+              </CardTitle>
+              <CardDescription>
+                Scientific calculations for {currentAsteroid.name}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-primary mb-3">Physical Properties</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Diameter:</span>
+                      <span className="font-medium">{currentAsteroid.size}m</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Mass:</span>
+                      <span className="font-medium">{calculations.mass.toFixed(2)} billion kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Velocity:</span>
+                      <span className="font-medium">{currentAsteroid.velocity} km/s</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Entry Angle:</span>
+                      <span className="font-medium">{currentAsteroid.angle}°</span>
                     </div>
                   </div>
+                </div>
 
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
-                      <h4 className="font-semibold text-destructive mb-2">Crater Formation</h4>
-                      <div className="space-y-1 text-sm">
-                        <p>Crater Diameter: <span className="text-foreground font-medium">{calculations.craterDiameter.toFixed(2)} km</span></p>
-                        <p>Crater Depth: <span className="text-foreground font-medium">{(calculations.craterDiameter * 0.2).toFixed(2)} km</span></p>
-                      </div>
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-destructive mb-3">Destruction Potential</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Kinetic Energy:</span>
+                      <span className="font-medium">{calculations.energy.toFixed(2)} PJ</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>TNT Equivalent:</span>
+                      <span className="font-medium text-destructive">
+                        {calculations.tntEquivalent >= 1e6 
+                          ? `${(calculations.tntEquivalent / 1e6).toFixed(1)} Mt`
+                          : `${(calculations.tntEquivalent / 1e3).toFixed(1)} kt`
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Crater Diameter:</span>
+                      <span className="font-medium">{calculations.craterDiameter.toFixed(2)} km</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>People at Risk:</span>
+                      <span className="font-medium text-destructive">
+                        {calculations.populationAffected > 1e6 
+                          ? `${(calculations.populationAffected / 1e6).toFixed(1)}M`
+                          : `${(calculations.populationAffected / 1e3).toFixed(0)}K`
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                    {deflectionDeltaV[0] > 0 && (
-                      <div className="p-4 rounded-lg bg-stellar-500/10 border border-stellar-500/30">
-                        <h4 className="font-semibold text-stellar-500 mb-2">Deflection Result</h4>
-                        <div className="space-y-1 text-sm">
-                          <p>Trajectory Shift: <span className="text-foreground font-medium">{calculations.deflectionDistance.toFixed(0)} km</span></p>
-                          <p>Status: <span className="text-stellar-500 font-medium">
-                            {calculations.deflectionDistance > 12756 ? "Earth Miss!" : "Impact Still Likely"}
-                          </span></p>
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-stellar-500 mb-3">Defense Analysis</h4>
+                  <div className="space-y-2 text-sm">
+                    {deflectionDeltaV[0] > 0 ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Deflection:</span>
+                          <span className="font-medium">{deflectionDeltaV[0]} km/s</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span>Trajectory Shift:</span>
+                          <span className="font-medium">{calculations.deflectionDistance.toFixed(0)} km</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Mission Status:</span>
+                          <span className={`font-medium ${calculations.deflectionDistance > 12756 ? 'text-green-500' : 'text-destructive'}`}>
+                            {calculations.deflectionDistance > 12756 ? "SUCCESS" : "FAILED"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Survival Chance:</span>
+                          <span className={`font-medium ${calculations.survivalChance > 90 ? 'text-green-500' : calculations.survivalChance > 50 ? 'text-yellow-500' : 'text-destructive'}`}>
+                            {calculations.survivalChance.toFixed(0)}%
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center p-4 bg-destructive/10 rounded-lg border border-destructive/30">
+                        <AlertTriangle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                        <p className="text-destructive font-medium">No Defense Active</p>
+                        <p className="text-xs text-muted-foreground">Apply delta-V to deflect asteroid</p>
                       </div>
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div className="mt-6 p-4 rounded-lg bg-muted/20 border border-border">
-                  <h4 className="font-semibold mb-2 flex items-center">
-                    <AlertTriangle className="w-4 h-4 mr-2 text-accent" />
-                    Impact Assessment
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {calculations.tntEquivalent < 1000 
-                      ? "This asteroid would likely burn up in the atmosphere or cause minimal damage."
-                      : calculations.tntEquivalent < 1000000
-                      ? "This impact would cause significant regional destruction, similar to major nuclear weapons."
-                      : "This would be a civilization-threatening event, potentially causing global climate effects."
-                    }
-                    {deflectionDeltaV[0] > 0 && calculations.deflectionDistance > 12756 && 
-                      " However, the applied deflection would successfully divert the asteroid away from Earth!"
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Visualization placeholder */}
-            <Card className="cosmic-glow">
-              <CardHeader>
-                <CardTitle>3D Trajectory Visualization</CardTitle>
-                <CardDescription>
-                  Interactive 3D model showing asteroid approach and impact
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-96 bg-gradient-to-b from-background/50 to-secondary/20 rounded-lg border border-primary/20 flex items-center justify-center">
-                  <div className="text-center">
-                    <Globe className="w-16 h-16 text-primary mx-auto mb-4 animate-float" />
-                    <h3 className="text-xl font-semibold mb-2">3D Visualization</h3>
-                    <p className="text-muted-foreground">
-                      Interactive 3D scene will be implemented here showing<br />
-                      Earth, asteroid trajectory, and impact visualization
-                    </p>
-                    <Button variant="cosmic" className="mt-4">
-                      Enable 3D View
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              <div className="mt-6 p-4 rounded-lg bg-muted/20 border border-border">
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <AlertTriangle className="w-4 h-4 mr-2 text-accent" />
+                  Scientific Assessment
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  {calculations.tntEquivalent < 1000 
+                    ? "This asteroid would likely burn up in the atmosphere with minimal surface damage. Spectacular meteor show expected."
+                    : calculations.tntEquivalent < 100000
+                    ? "Regional destruction expected. City-wide devastation, but humanity survives. Evacuation protocols recommended."
+                    : calculations.tntEquivalent < 10000000
+                    ? "Continental catastrophe. Mass extinctions likely, nuclear winter possible. Global emergency response required."
+                    : "Planetary extinction event. Civilization collapse imminent. Only deflection can save humanity."
+                  }
+                  {deflectionDeltaV[0] > 0 && calculations.deflectionDistance > 12756 && 
+                    " Fortunately, the applied deflection mission successfully diverts this cosmic threat away from Earth! 🎯"
+                  }
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
