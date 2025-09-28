@@ -12,20 +12,27 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Separate component to ensure Router context is available
+const AppRoutes = () => (
+  <>
+    <Navigation />
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/simulator" element={<AsteroidSimulator />} />
+      <Route path="/solar-system" element={<SolarSystem />} />
+      <Route path="/education" element={<Education />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/simulator" element={<AsteroidSimulator />} />
-          <Route path="/solar-system" element={<SolarSystem />} />
-          <Route path="/education" element={<Education />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
