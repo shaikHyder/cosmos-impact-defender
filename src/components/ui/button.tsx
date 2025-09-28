@@ -15,6 +15,11 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Cosmic variants
+        cosmic: "bg-gradient-cosmic text-primary-foreground hover:shadow-lg hover:shadow-primary/20 cosmic-glow",
+        stellar: "bg-gradient-stellar text-accent-foreground hover:shadow-lg hover:shadow-accent/20",
+        nebula: "bg-secondary/50 text-secondary-foreground border border-primary/20 hover:bg-secondary/70 hover:border-primary/40",
+        asteroid: "bg-destructive/20 text-destructive border border-destructive/30 hover:bg-destructive/30 hover:border-destructive/50",
       },
       size: {
         default: "h-10 px-4 py-2",

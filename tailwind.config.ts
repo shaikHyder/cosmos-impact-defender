@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -47,15 +48,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        // Cosmic color extensions
+        cosmic: {
+          50: "hsl(217 100% 95%)",
+          100: "hsl(217 100% 85%)",
+          500: "hsl(217 100% 65%)",
+          600: "hsl(217 100% 55%)",
+          900: "hsl(217 100% 25%)",
+        },
+        nebula: {
+          500: "hsl(250 50% 25%)",
+          600: "hsl(250 50% 20%)",
+          800: "hsl(250 50% 15%)",
+        },
+        stellar: {
+          400: "hsl(45 100% 75%)",
+          500: "hsl(45 100% 70%)",
+          600: "hsl(45 100% 65%)",
         },
       },
       borderRadius: {
@@ -84,6 +93,14 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "twinkle": "twinkle 3s ease-in-out infinite alternate",
+        "float": "float 3s ease-in-out infinite",
+        "stellar-glow": "stellar-glow 2s ease-in-out infinite",
+      },
+      backgroundImage: {
+        "gradient-cosmic": "var(--gradient-cosmic)",
+        "gradient-nebula": "var(--gradient-nebula)",
+        "gradient-stellar": "var(--gradient-stellar)",
       },
     },
   },
